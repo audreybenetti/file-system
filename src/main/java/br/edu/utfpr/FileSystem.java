@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class FileSystem {
 
-    // FIXME ajustar para o caminho no PC do aluno
+    //FIXME escolher diretório
     public static final String ROOT = "C:" + File.separator + "utfpr" + File.separator + "hd";
 
     public FileSystem() {

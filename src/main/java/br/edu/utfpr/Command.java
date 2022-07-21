@@ -2,12 +2,10 @@ package br.edu.utfpr;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public enum Command {
 
@@ -20,7 +18,12 @@ public enum Command {
 
         @Override
         Path execute(Path path) throws IOException {
-            // TODO Implementar o LIST
+            if (!Files.isDirectory(path)) {
+                throw new UnsupportedOperationException("Comando exclusivo para abertura de pastas.");
+            } else
+                Files.list(Paths.get(path.toUri()))
+                        .map(Path::getFileName)
+                        .forEach(System.out::println);
             return path;
         }
     },
@@ -39,9 +42,12 @@ public enum Command {
         }
 
         @Override
-        Path execute(Path path) {
-            // TODO implementar o SHOW
-            return path;
+        Path execute(Path path) throws IOException {
+            path = Path.of(path.toString() + File.separator + parameters[1]);
+            if(!Files.exists(path)){
+                throw new UnsupportedOperationException("Arquivo não encontrado.");
+            } else FileReader.read(path);
+            return path.getParent();
         }
     },
     BACK() {
@@ -53,8 +59,11 @@ public enum Command {
 
         @Override
         Path execute(Path path) {
-            // TODO implementar o BACK
-            return path.getParent();
+            if (path.equals(Path.of(FileSystem.ROOT))) {
+                throw new UnsupportedOperationException("Já no diretório raiz.");
+            } else path = path.getParent();
+            new File(path.toUri());
+            return path;
         }
     },
     OPEN() {
@@ -73,7 +82,10 @@ public enum Command {
 
         @Override
         Path execute(Path path) {
-            // TODO implementar o OPEN
+            path = Path.of(path.toString() + File.separator + parameters[1]);
+            if (!Files.isDirectory(path)) {
+                throw new UnsupportedOperationException("Comando exclusivo para abertura de pastas.");
+            } else new File(path.toUri());
             return path;
         }
     },
@@ -93,7 +105,20 @@ public enum Command {
 
         @Override
         Path execute(Path path) throws IOException {
-            // TODO implementar o DETAIL
+            Path file = Path.of(path.toString() + File.separator + parameters[1]);
+            BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
+            System.out.printf("""
+                            Creation time: %s
+                            Last modified: %s
+                            Last access: %s
+                            Is directory: %s
+                            Is regular file: %s\s
+                            Is symbolic link: %s
+                            Is other: %s\s
+                            Size: %s bytes""",
+                    attributes.creationTime(), attributes.lastModifiedTime(),
+                    attributes.lastAccessTime(), attributes.isDirectory(), attributes.isRegularFile(),
+                    attributes.isSymbolicLink(), attributes.isOther(), attributes.size());
             return path;
         }
     },
@@ -106,7 +131,7 @@ public enum Command {
 
         @Override
         Path execute(Path path) {
-            System.out.print("Saindo...");
+            System.out.print("Saindo...\n");
             return path;
         }
 
@@ -144,4 +169,6 @@ public enum Command {
 
         throw new UnsupportedOperationException("Can't parse command [%s]".formatted(commandToParse));
     }
+
+
 }
